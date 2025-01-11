@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        printf("Usage: %s (data file name, e.g. data.txt) (max width) (max height)\n", argv[0]);
+    if (argc != 3) {
+        printf("Usage: %s (data file name, e.g. data.txt) (max size)\n", argv[0]);
         return 1;
     }
 
@@ -14,24 +14,19 @@ int main(int argc, char* argv[]) {
     }
 
     char* endPtr;
-    size_t bufferSizeWidth = strtol(argv[2], &endPtr, 10);
+    size_t bufferSize = strtol(argv[2], &endPtr, 10);
     if (*endPtr != '\0' || argv[2][0] == '-') {
-        printf("Invalid max width: %s, expected unsigned int\n", argv[2]);
+        printf("Invalid max size: %s, expected unsigned int\n", argv[2]);
         return 1;
     }
-    size_t bufferSizeHeight = strtol(argv[3], &endPtr, 10);
-    if (*endPtr != '\0' || argv[3][0] == '-') {
-        printf("Invalid max height: %s, expected unsigned int\n", argv[3]);
-        return 1;
-    }
-    char** buffer = malloc(bufferSizeHeight * sizeof(char*));
+    char** buffer = malloc(bufferSize * sizeof(char*));
     if (buffer == NULL) {
         printf("Memory allocation failed");
         return 1;
     }
 
-    for (int i = 0; i < bufferSizeHeight; i++) {
-        buffer[i] = malloc(bufferSizeWidth * sizeof(char));
+    for (int i = 0; i < bufferSize; i++) {
+        buffer[i] = malloc(bufferSize * sizeof(char));
 
         if (buffer[i] == NULL) {
             printf("Memory allocation failed");
@@ -47,10 +42,10 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        if (lineIndex >= bufferSizeHeight) {
+        if (lineIndex >= bufferSize) {
             printf("Height is too small\n");
             return 1;
-        } else if (charIndex >= bufferSizeWidth + 1) {
+        } else if (charIndex >= bufferSize + 1) {
             printf("Width is too small\n");
             return 1;
         }
@@ -64,21 +59,20 @@ int main(int argc, char* argv[]) {
         buffer[lineIndex][charIndex++] = (char)ch;
     }
 
-    for (int i = 0; i < lineIndex; i++) {
-        for (int j = 0; j < bufferSizeWidth; j++) {
-            printf("%c", buffer[i][j]);
-            if (buffer[i][j] == '\n') {
-                break;
+    // warshall algorithm here
+    for (int k = 0; k < bufferSize; k++) {
+        for (int i = 0; i < bufferSize; i++) {
+            for (int j = 0; j < bufferSize; j++) {
+                if (buffer[i][k] == '1' && buffer[k][j] == '1') {
+                    buffer[i][j] = '1';
+                }
             }
         }
-        printf("\n");
     }
 
-    // warshall algorithm here
-
     for (int i = 0; i < lineIndex; i++) {
-        for (int j = 0; j < bufferSizeWidth; j++) {
-            printf("%c", buffer[i][j]);
+        for (int j = 0; j < bufferSize; j++) {
+            printf("%c ", buffer[i][j]);
             if (buffer[i][j] == '\n') {
                 break;
             }
