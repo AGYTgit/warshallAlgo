@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void freeBuffer(char** buffer, size_t bufferSize) {
+    for (int i = 0; i < bufferSize; i++) {
+        free(buffer[i]);
+    }
+    free(buffer);
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         printf("Usage: %s (data file name, e.g. data.txt) (max size)\n", argv[0]);
@@ -17,19 +24,24 @@ int main(int argc, char* argv[]) {
     size_t bufferSize = strtol(argv[2], &endPtr, 10);
     if (*endPtr != '\0' || argv[2][0] == '-') {
         printf("Invalid max size: %s, expected unsigned int\n", argv[2]);
+        fclose(file);
         return 1;
     }
+
     char** buffer = malloc(bufferSize * sizeof(char*));
     if (buffer == NULL) {
-        printf("Memory allocation failed");
+        printf("Memory allocation failed\n");
+        fclose(file);
         return 1;
     }
 
     for (int i = 0; i < bufferSize; i++) {
         buffer[i] = malloc(bufferSize * sizeof(char));
-
         if (buffer[i] == NULL) {
-            printf("Memory allocation failed");
+            printf("Memory allocation failed\n");
+
+            freeBuffer(buffer, i);
+            fclose(file);
             return 1;
         }
     }
@@ -44,9 +56,15 @@ int main(int argc, char* argv[]) {
 
         if (lineIndex >= bufferSize) {
             printf("Height is too small\n");
+
+            freeBuffer(buffer, bufferSize);
+            fclose(file);
             return 1;
         } else if (charIndex >= bufferSize + 1) {
             printf("Width is too small\n");
+
+            freeBuffer(buffer, bufferSize);
+            fclose(file);
             return 1;
         }
 
@@ -59,7 +77,8 @@ int main(int argc, char* argv[]) {
         buffer[lineIndex][charIndex++] = (char)ch;
     }
 
-    // warshall algorithm here
+    fclose(file);
+
     for (int k = 0; k < bufferSize; k++) {
         for (int i = 0; i < bufferSize; i++) {
             for (int j = 0; j < bufferSize; j++) {
@@ -70,15 +89,14 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    for (int i = 0; i < lineIndex; i++) {
+    for (int i = 0; i < bufferSize; i++) {
         for (int j = 0; j < bufferSize; j++) {
             printf("%c ", buffer[i][j]);
-            if (buffer[i][j] == '\n') {
-                break;
-            }
         }
         printf("\n");
     }
 
-    fclose(file);
+    freeBuffer(buffer, bufferSize);
+
+    return 0;
 }
